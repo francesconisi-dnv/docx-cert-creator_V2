@@ -18,13 +18,12 @@ COLORE_TESTO = (26, 26, 26)
 SPOSTAMENTO_VERTICALE = 0  
 
 # --- COORDINATE VERTICALI RELATIVE (in millimetri) ---
-# Spaziatura uniforme di 20mm tra ogni blocco per un allineamento centrale perfetto
 Y_ATTESTATO = 55 + SPOSTAMENTO_VERTICALE
 Y_CERTIFICA = 75 + SPOSTAMENTO_VERTICALE
 Y_NOME = 95 + SPOSTAMENTO_VERTICALE
 Y_ORE = 115 + SPOSTAMENTO_VERTICALE
 Y_CORSO = 135 + SPOSTAMENTO_VERTICALE
-Y_DATA = 165 + SPOSTAMENTO_VERTICALE  # Spazio maggiore qui per ospitare le 2 righe del corso
+Y_DATA = 165 + SPOSTAMENTO_VERTICALE  
 
 # --- COORDINATE LOGO SINISTRA ---
 MARGINE_SUPERIORE = 15  
@@ -34,14 +33,17 @@ X_LOGO = MARGINE_LATERALE
 Y_LOGO = MARGINE_SUPERIORE
 LARGHEZZA_LOGO = 40     
 
+# --- DATI VARIABILI (Ex Segnaposto del Template) ---
 FILE_DATI = {
     "PARTECIPANTI_LIVE_9ORE.xlsx": {
         "ore": "9",
-        "date": "11, 20 maggio e 3 giugno 2026"
+        "nome_corso": "Introduzione dell'Intelligenza Artificiale nell'Organizzazione e Gestione dei Servizi Comunali",
+        "in_data": "tenutosi i giorni 11, 20 maggio e 3 giugno 2026"
     },
     "PARTECIPANTI_PRESENZA_16ORE.xlsx": {
         "ore": "16",
-        "date": "12, 13 e 14 ottobre 2026" 
+        "nome_corso": "Corso Avanzato di Esempio per la Pubblica Amministrazione",
+        "in_data": "tenutosi i giorni 12, 13 e 14 ottobre 2026" 
     }
 }
 
@@ -51,7 +53,6 @@ COLONNA_COGNOME = "COGNOME"
 def genera_attestati_fpdf_allineato():
     print("--- INIZIO GENERAZIONE ATTESTATI ---")
     
-    # Svuota e ricrea la cartella di output
     if os.path.exists(OUTPUT_DIR):
         try:
             print(f"Elimino la cartella precedente '{OUTPUT_DIR}'...")
@@ -69,7 +70,8 @@ def genera_attestati_fpdf_allineato():
             continue
             
         ore = info_corso["ore"]
-        date_corso = info_corso["date"]
+        nome_corso = info_corso["nome_corso"]
+        in_data = info_corso["in_data"]
             
         try:
             df = pd.read_excel(file_excel)
@@ -125,25 +127,24 @@ def genera_attestati_fpdf_allineato():
                 pdf.set_xy(0, Y_NOME) 
                 pdf.cell(w=297, h=10, text=nome_completo, align="C")
                 
+                # INSERIMENTO DINAMICO ORE
                 pdf.set_font(font_family, style="", size=16)
                 pdf.set_text_color(*COLORE_TESTO)
                 pdf.set_xy(0, Y_ORE)
                 testo_ore = f"ha partecipato al corso di {ore} ore"
                 pdf.cell(w=297, h=10, text=testo_ore, align="C")
                 
-                # Calcolo esatto per centrare orizzontalmente il blocco multilinea:
-                # Larghezza foglio (297) - Larghezza testo (220) / 2 = 38.5
+                # INSERIMENTO DINAMICO TITOLO CORSO
                 pdf.set_font(font_family, style=font_style_bold, size=22)
                 pdf.set_text_color(*COLORE_VIOLA)
                 pdf.set_xy(38.5, Y_CORSO) 
-                titolo_corso = "Introduzione dell'Intelligenza Artificiale nell'Organizzazione e Gestione dei Servizi Comunali"
-                pdf.multi_cell(w=220, h=9, text=titolo_corso, align="C")
+                pdf.multi_cell(w=220, h=9, text=nome_corso, align="C")
                 
+                # INSERIMENTO DINAMICO DATA
                 pdf.set_font(font_family, style="", size=16)
                 pdf.set_text_color(*COLORE_TESTO)
                 pdf.set_xy(0, Y_DATA)
-                testo_data = f"tenutosi i giorni {date_corso}"
-                pdf.cell(w=297, h=10, text=testo_data, align="C")
+                pdf.cell(w=297, h=10, text=in_data, align="C")
                 
                 if os.path.exists(LOGO_PATH):
                     pdf.image(LOGO_PATH, x=X_LOGO, y=Y_LOGO, w=LARGHEZZA_LOGO)
